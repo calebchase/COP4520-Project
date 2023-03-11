@@ -2,7 +2,7 @@
 
 ## Instructions 
 
-This project uses c++ on Windows 10
+This project uses c++ on Windows 10 with the g++ compiler
 
 Compile and run:
 
