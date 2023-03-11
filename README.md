@@ -2,6 +2,8 @@
 
 ## Instructions 
 
+This project uses c++ on Windows 10
+
 Compile and run:
 
 - `g++ main.cpp`
