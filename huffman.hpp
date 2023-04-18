@@ -94,3 +94,25 @@ string encode(vector<int> vals, map<int, string> table)
 
     return str;
 }
+
+vector<int> decode(string input, HuffmanNode* root)
+{
+    vector<int> result;
+
+    HuffmanNode* curr = root;
+    for(int i = 0; i < input.size(); i++)
+    {
+        if(input[i] == '0')
+            curr = curr->l;
+        else
+            curr = curr->r;
+
+        if(curr->l == nullptr && curr->r == nullptr)
+        {
+            result.push_back(curr->val);
+            curr = root;
+        }
+    }
+
+    return result;
+}

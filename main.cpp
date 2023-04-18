@@ -277,8 +277,15 @@ vector<pair<int, int>> runLengthEncoding(vector<int> arr)
 	return result;
 }
 
-void huffmanEncoding()
-{}
+void testHuffmanEncoding(vector<int>& orig, vector<int>& decoded)
+{
+	assert(orig.size() == decoded.size());
+
+	for(int i = 0; i < orig.size(); i++)
+	{
+		assert(orig[i] == decoded[i]);
+	}
+}
 
 int main()
 {
@@ -310,20 +317,16 @@ int main()
 
 	Quantize(dctCoefficients, 0, 0);
 	vector<int> flattened = flatten(dctCoefficients);
-
-	displayFlattenedArrays(flattened);
-	cout << "==============\n";
-
 	vector<int> zigzag = zigzagEncoding(flattened);
-
-	displayFlattenedArrays(zigzag);
 	vector<pair<int, int>> rle = runLengthEncoding(zigzag);
 
-	std::vector<int> values = {0, 1, 1, 2, 3, 3, 3, 3, 4, 5};
-	vector<pair<int, int>> r  = runLengthEncoding(values);
-	HuffmanNode* t = buildTree(r);
-	map<int, string> table = buildTable(t);
-	string str = encode(values, table);
+	HuffmanNode* tree = buildTree(rle);
+	map<int, string> table = buildTable(tree);
+	string str = encode(zigzag, table);
+
+	vector<int> decodeTest = decode(str, tree);
+
+	testHuffmanEncoding(zigzag, decodeTest);
 
 
 	return 0;
