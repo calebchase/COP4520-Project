@@ -213,7 +213,18 @@ void displayFlattenedArrays(vector<int> arr)
 	}
 }
 
+vector<int> runDeltaEncoding(vector<int> arr)
+{
+	vector<int> result(arr.size(), 0);
+	int DC = arr[0];
 
+	for (int i = 1; i < 64; i++)
+	{
+		result[i] = arr[i] - DC;
+	}
+
+	return result;
+}
 
 int main()
 {
