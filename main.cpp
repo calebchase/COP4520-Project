@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <math.h>
+#include "huffman.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
@@ -36,6 +37,31 @@ static const int quantizationMatrix[8][8] =
 	{ 49, 64, 78, 87, 103, 121, 120, 101 },
 	{ 72, 92, 95, 98, 112, 100, 103, 99 }
 };
+
+static const int quantizationMatrixLuminance[8][8] =
+{
+	{ 16, 11, 10, 16, 24, 40, 51, 61 },
+	{ 12, 12, 14, 19, 26, 58, 60, 55 },
+	{ 14, 13, 16, 24, 40, 57, 69, 56 },
+	{ 14, 17, 22, 29, 51, 87, 80, 62 },
+	{ 18, 22, 37, 56, 68, 109, 103, 77 },
+	{ 24, 35, 55, 64, 81, 104, 113, 92 },
+	{ 49, 64, 78, 87, 103, 121, 120, 101 },
+	{ 72, 92, 95, 98, 112, 100, 103, 99 }
+};
+
+static const int quantizationMatrixChrominance[8][8] =
+{
+	{ 16, 11, 10, 16, 24, 40, 51, 61 },
+	{ 12, 12, 14, 19, 26, 58, 60, 55 },
+	{ 14, 13, 16, 24, 40, 57, 69, 56 },
+	{ 14, 17, 22, 29, 51, 87, 80, 62 },
+	{ 18, 22, 37, 56, 68, 109, 103, 77 },
+	{ 24, 35, 55, 64, 81, 104, 113, 92 },
+	{ 49, 64, 78, 87, 103, 121, 120, 101 },
+	{ 72, 92, 95, 98, 112, 100, 103, 99 }
+};
+
 
 static const int zigzag[64] =
 {
@@ -226,6 +252,34 @@ vector<int> runDeltaEncoding(vector<int> arr)
 	return result;
 }
 
+vector<pair<int, int>> runLengthEncoding(vector<int> arr)
+{
+	vector<pair<int, int>> result;
+
+	int val = arr[0];
+	int count = 1;
+	for (int i = 1; i < arr.size(); i++)
+	{
+		if(val == arr[i])
+		{
+			count++;
+		}
+		else
+		{
+			result.push_back(pair(val, count));
+			count = 1;
+			val = arr[i];
+		}
+	}
+
+	result.push_back(pair(val, count));
+
+	return result;
+}
+
+void huffmanEncoding()
+{}
+
 int main()
 {
 	int width, height, channels;
@@ -263,6 +317,13 @@ int main()
 	vector<int> zigzag = zigzagEncoding(flattened);
 
 	displayFlattenedArrays(zigzag);
+	vector<pair<int, int>> rle = runLengthEncoding(zigzag);
+
+	std::vector<int> values = {0, 1, 1, 2, 3, 3, 3, 3, 4, 5};
+	vector<pair<int, int>> r  = runLengthEncoding(values);
+	HuffmanNode* t = buildTree(r);
+	map<int, string> table = buildTable(t);
+	string str = encode(values, table);
 
 
 	return 0;
