@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <vector>
 #include <math.h>
+#include <thread>
+#include <atomic>
 #include "huffman.hpp"
+#include "CompressorThread.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
@@ -12,12 +15,14 @@
 
 using namespace std;
 
+/*
 struct PixelYCbCr
 {
 	int Y;
 	int Cb;
 	int Cr;
 };
+*/
 
 struct PixelRGB
 {
@@ -86,38 +91,39 @@ PixelYCbCr toYCbCr(int R, int G, int B)
 	return outColor;
 }
 
-vector<vector<PixelYCbCr>>* CreateYCbCrArray(unsigned char* img, vector<vector<PixelYCbCr>>* outVector, int channels)
+void CreateYCbCrArray(unsigned char* img, vector<vector<PixelYCbCr>>& outVector, int channels)
 {
 	int dataIndex = 0;
-	for (int i = 0; i < outVector->size(); i++)
+	for (int i = 0; i < outVector.size(); i++)
 	{
-		for (int j = 0; j < (*outVector)[i].size(); j++)
+		for (int j = 0; j < outVector[i].size(); j++)
 		{
-			(*outVector)[i][j] = toYCbCr(img[dataIndex], img[dataIndex + 1], img[dataIndex + 2]);
+			outVector[i][j] = toYCbCr(img[dataIndex], img[dataIndex + 1], img[dataIndex + 2]);
 			dataIndex += 3;
 		}
 	}
 
-	return outVector;
 }
 
-void WriteYCbCrArray(int width, int height, int channels, vector<vector<PixelYCbCr>>* outVector)
+void WriteYCbCrArray(int width, int height, int channels, vector<vector<PixelYCbCr>>& outVector, const char* name)
 {
 	unsigned char* outData = new unsigned char[width * height * channels];
 
 	int dataIndex = 0;
-	for (int i = 0; i < outVector->size(); i++)
+	cout << outVector.size();
+	for (int i = 0; i < height; i++)
 	{
-		for (int j = 0; j < (*outVector)[i].size(); j++)
+		for (int j = 0; j < width; j++)
 		{
 
-			outData[dataIndex++] = (unsigned char)(*outVector)[i][j].Y;
-			outData[dataIndex++] = (unsigned char)(*outVector)[i][j].Cb;
-			outData[dataIndex++] = (unsigned char)(*outVector)[i][j].Cr;
+			outData[dataIndex++] = (unsigned char)(outVector)[i][j].Y;
+			outData[dataIndex++] = (unsigned char)(outVector)[i][j].Cb;
+			outData[dataIndex++] = (unsigned char)(outVector)[i][j].Cr;
 		}
 	}
 
-	stbi_write_bmp("output.bmp", width, height, 3, outData);
+	stbi_write_bmp(name, width, height, 3, outData);
+	cout << "Image written" << endl;
 }
 
 float DCTCosVal(int firstIndex, int secondIndex)
@@ -145,7 +151,7 @@ void DCT(vector<vector<PixelYCbCr>>* pixelArray, int rowIndex, int colIndex, int
 	float dctTemp[8][8];
 
 	(*pixelArray)[0 + 0][0 + colIndex].Y = 255;
-	cout << (*pixelArray)[0][0].Y;
+	//cout << (*pixelArray)[0][0].Y;
 
 	// used for testing
 	// for (int i = 0; i < 8; i++)
@@ -197,9 +203,7 @@ void Quantize(vector<vector<int>>& pixelArray, int rowIndex, int colIndex)
 		for (int j = 0; j < 8; j++)
 		{
 			pixelArray[i][j] = round((float)pixelArray[i][j] / quantizationMatrix[i][j]);
-			cout << pixelArray[i][j] << ", ";
 		}
-		cout << "\n";
 	}
 }
 
@@ -227,16 +231,6 @@ vector<int> zigzagEncoding(vector<int> pixelArray)
 	}
 
 	return result;
-}
-
-void displayFlattenedArrays(vector<int> arr)
-{
-	for (int i = 0; i < 64; i++)
-	{
-		cout << arr[i] << ", ";
-		if (i % 7 == 0 && i != 0)
-			cout << "\n";
-	}
 }
 
 vector<int> runDeltaEncoding(vector<int> arr)
@@ -287,8 +281,29 @@ void testHuffmanEncoding(vector<int>& orig, vector<int>& decoded)
 	}
 }
 
+void testThreadedYCbCr(vector<vector<PixelYCbCr>>& r1, vector<vector<PixelYCbCr>>& r2)
+{
+	//assert(r1.size() == r2.size());
+
+	for(int i = 0; i < r2.size(); i++)
+	{
+		for(int j = 0; j < r2[i].size(); j++)
+		{
+			if((r1[i][j].Y != r2[i][j].Y) || (r1[i][j].Cb != r2[i][j].Cb) || (r1[i][j].Cr != r2[i][j].Cr))
+			{
+				cout << "not equal" << endl;
+				break;
+			}
+			
+		}
+	}
+}
+
 int main()
 {
+	int NUM_THREADS = 4;
+	thread* threads = new thread[NUM_THREADS];
+
 	int width, height, channels;
 	unsigned char* img = stbi_load("tree.jpg", &width, &height, &channels, 3);
 
@@ -299,11 +314,41 @@ int main()
 	}
 
 	std::cout << "Loaded image with a width of " << width << "px, a height of " << height << " px and  " << channels << " channels\n";
-	vector<vector<PixelYCbCr>> pixelArray(height, vector<PixelYCbCr>(width));
 
-	CreateYCbCrArray(img, &pixelArray, 3);
-	DCT(&pixelArray, 0, 0, 0);
+	int paddingX = 8 - (width % 8);
+	int paddingY = 8 - (height % 8);
 
+	paddingX = paddingX == 8 ? 0 : paddingX;
+	paddingY = paddingY == 8 ? 0 : paddingY;
+
+	vector<vector<PixelYCbCr>> pixelArray((height + paddingY), vector<PixelYCbCr>(width + paddingX));
+	vector<vector<PixelYCbCr>> pixelArray2((height), vector<PixelYCbCr>(width));
+
+	CreateYCbCrArray(img, pixelArray2, 3);
+	//DCT(&pixelArray, 0, 0, 0);
+
+	atomic_int col_index(0);
+	atomic_int row_index(0);
+	atomic_bool done(false);
+
+	for(int i = 0; i < NUM_THREADS; i++)
+	{
+		threads[i] = thread(CompressorThread(i, img, (width), (height), channels), ref(row_index), ref(col_index), ref(done), ref(pixelArray)); 
+	}
+
+	for(int i = 0; i < NUM_THREADS; i++)
+	{
+		threads[i].join();
+	}
+
+	while(!done.load()) { cout << "waiting\n";}
+
+	string name = "SingleThread.bmp";
+	WriteYCbCrArray(width, height, 3, pixelArray2, name.c_str());
+	
+	name = "multiThread.bmp";
+	WriteYCbCrArray(width, height, 3, pixelArray, name.c_str());
+	// TESTS
 	vector<vector<int>> dctCoefficients = {
 	{139, -39,  44, -25,   8, -24,   9,  -5},
 	{  8, -21, -16,  13, -16,  -3, -10,   4},
@@ -327,8 +372,8 @@ int main()
 	vector<int> decodeTest = decode(str, tree);
 
 	testHuffmanEncoding(zigzag, decodeTest);
+	testThreadedYCbCr(pixelArray, pixelArray2);
 
 
 	return 0;
-	//WriteYCbCrArray(width, height, 3, &pixelArray);
 }
