@@ -54,7 +54,7 @@ public:
                     // Make sure only one thread increments col_index at a time
                     // this seems kinda hacky, but two threads can access row_index around the same time and increment col_index twice
                     // resulting in skipped columns. This check ensures only the first thread to go above height can update col and row.
-                    if(startCol == col_index.load() && startRow < (height + 8))
+                    if(startCol == col_index.load() && startRow < (height + 7))
                     {
                         col_index += 8;
                         row_index.store(0);

@@ -315,6 +315,7 @@ int main()
 
 	std::cout << "Loaded image with a width of " << width << "px, a height of " << height << " px and  " << channels << " channels\n";
 
+	// Calculate padding around border of image
 	int paddingX = 8 - (width % 8);
 	int paddingY = 8 - (height % 8);
 
@@ -348,6 +349,7 @@ int main()
 	
 	name = "multiThread.bmp";
 	WriteYCbCrArray(width, height, 3, pixelArray, name.c_str());
+
 	// TESTS
 	vector<vector<int>> dctCoefficients = {
 	{139, -39,  44, -25,   8, -24,   9,  -5},
