@@ -131,26 +131,26 @@ float DCTCosVal(int firstIndex, int secondIndex)
 	return std::cos((3.14159262 / (8.0)) * (firstIndex + 0.5) * secondIndex);
 }
 
-int getPixelVal(PixelYCbCr* pixel, int type)
+int getPixelVal(PixelYCbCr pixel, int type)
 {
 	if (type == 0)
-		return pixel->Y;
+		return pixel.Y;
 	if (type == 1)
-		return pixel->Cb;
+		return pixel.Cb;
 	if (type == 2)
-		return pixel->Cr;
+		return pixel.Cr;
 	return -1;
 }
 
 // Might have bugs
-void DCT(vector<vector<PixelYCbCr>>* pixelArray, int rowIndex, int colIndex, int type)
+void DCT(vector<vector<PixelYCbCr>>& pixelArray, int rowIndex, int colIndex, int type)
 {
 	float ci = 0;
 	float cj = 0;
 	float sum = 0;
 	float dctTemp[8][8];
 
-	(*pixelArray)[0 + 0][0 + colIndex].Y = 255;
+	pixelArray[0 + 0][0 + colIndex].Y = 255;
 	//cout << (*pixelArray)[0][0].Y;
 
 	// used for testing
@@ -166,23 +166,24 @@ void DCT(vector<vector<PixelYCbCr>>* pixelArray, int rowIndex, int colIndex, int
 	{
 		for (int j = 0; j < 8; j++)
 		{
-			ci = i == 0 ? 1 / std::sqrt(8.0) : std::sqrt(2) / std::sqrt(8);
-			cj = j == 0 ? 1 / std::sqrt(8.0) : std::sqrt(2) / std::sqrt(8);
+			ci = i == 0 ? 1 / std::sqrt(8.0) : sqrt(2.0) / sqrt(8.0);
+			cj = j == 0 ? 1 / std::sqrt(8.0) : sqrt(2.0) / sqrt(8.0);
 
 			sum = 0;
 			for (int k = 0; k < 8; k++)
 			{
 				for (int l = 0; l < 8; l++)
 				{
-					cout << getPixelVal(&((*pixelArray)[i + rowIndex][j + colIndex]), type);
-					sum += getPixelVal(&((*pixelArray)[i + rowIndex][j + colIndex]), type) * DCTCosVal(k, i) * DCTCosVal(l, j);
+					sum += getPixelVal(pixelArray[i + rowIndex][j + colIndex], type) * 
+						cos((2 * k  + 1) * i * 3.14159 / 16.0) *
+						cos((2 * l + 1) * j * 3.14159 / 16.0);
 				}
-				cout << "\n";
 			}
 			dctTemp[i][j] = ci * cj * sum;
 		}
 	}
 
+	return;
 	// used for testing
 	// for (int i = 0; i < 8; i++)
 	// {
@@ -305,7 +306,7 @@ int main()
 	thread* threads = new thread[NUM_THREADS];
 
 	int width, height, channels;
-	unsigned char* img = stbi_load("tree.jpg", &width, &height, &channels, 3);
+	unsigned char* img = stbi_load("smallerTree2.jpg", &width, &height, &channels, 3);
 
 	if (img == NULL)
 	{
@@ -326,7 +327,7 @@ int main()
 	vector<vector<PixelYCbCr>> pixelArray2((height), vector<PixelYCbCr>(width));
 
 	CreateYCbCrArray(img, pixelArray2, 3);
-	//DCT(&pixelArray, 0, 0, 0);
+	DCT(pixelArray2, 0, 0, 0);
 
 	atomic_int col_index(0);
 	atomic_int row_index(0);
