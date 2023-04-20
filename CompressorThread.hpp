@@ -44,12 +44,12 @@ public:
     {
         while(row_index.load() <= height || col_index.load() <= width)
         {
-            startRow = row_index.fetch_add(8);
-            startCol = col_index.load();
+            startCol = col_index.fetch_add(8);
+            startRow = row_index.load();
 
-            if(startRow >= height)
+            if(startCol >= width)
             {
-                if(startCol >= width)
+                if(startRow >= height)
                 {
                     break;
                 }
@@ -58,10 +58,10 @@ public:
                     // Make sure only one thread increments col_index at a time
                     // this seems kinda hacky, but two threads can access row_index around the same time and increment col_index twice
                     // resulting in skipped columns. This check ensures only the first thread to go above height can update col and row.
-                    if(startCol == col_index.load() && startRow < (height + 7))
+                    if(startRow == row_index.load() && startCol < (width + 7))
                     {
-                        col_index += 8;
-                        row_index.store(0);
+                        row_index += 8;
+                        col_index.store(0);
                     }
                 }
             }
