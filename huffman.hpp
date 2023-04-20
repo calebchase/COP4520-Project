@@ -67,7 +67,7 @@ map<int, string> buildTable(HuffmanNode* root)
 {
     map<int, string> table;
 
-    function<void(HuffmanNode*, string)> traverse = [&](HuffmanNode* node, std::string code)
+    function<void(HuffmanNode*, string)> traverse = [&](HuffmanNode* node, string code)
     {
         if(node->l == nullptr && node->r == nullptr)
             table[node->val] = code;

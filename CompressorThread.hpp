@@ -92,6 +92,11 @@ private:
         vector<int> dctCb(64, 0);
         vector<int> dctCr(64, 0);
 
+        //vector<PixelYCbCr> dctCoefficients(64);
+        //DCT(outVector, dctCoefficients);
+        //Quantize(dctCoefficients);
+
+        /*
         DCT(outVector, dctY,  0);
         DCT(outVector, dctCb, 1);
         DCT(outVector, dctCr, 2);
@@ -112,6 +117,7 @@ private:
         HuffmanNode* treeY = buildTree(rleY);
 	    map<int, string> tableY = buildTable(treeY);
 	    string strY = encode(encodedY, tableY);
+        */
     }
 
     PixelYCbCr toYCbCr(int R, int G, int B)
@@ -163,11 +169,14 @@ private:
         return -1;
     }
 
-    void DCT(vector<vector<PixelYCbCr>>& pixelArray, vector<int>& out, int type)
+    void DCT(vector<vector<PixelYCbCr>>& pixelArray, vector<PixelYCbCr>& out)
     {
         float ci = 0;
         float cj = 0;
-        float sum = 0;
+        float sumY = 0;
+        float sumCb = 0;
+        float sumCr = 0;
+        float cosk, cosl;
 
         int index = 0;
 
@@ -179,24 +188,28 @@ private:
                 ci = i == 0 ? inverseSQR8 : sqr2oversqr8;
                 cj = j == 0 ? inverseSQR8 : sqr2oversqr8;
 
-                sum = 0;
+                sumY = 0;
+                sumCb = 0;
+                sumCr = 0;
                 for (int k = 0; k < 8; k++)
                 {
                     for (int l = 0; l < 8; l++)
                     {
-                        sum += getPixelVal(pixelArray[i][j], type) * 
-						    cos((2 * k  + 1) * i * piOver16) *
-						    cos((2 * l + 1) * j * piOver16);
+                        cosk = cos((2 * k + 1) * i * piOver16);
+                        cosl = cos((2 * l + 1) * j * piOver16);
+                        sumY += getPixelVal(pixelArray[i][j], 0) * cosk * cosl;
+                        sumCb += getPixelVal(pixelArray[i][j], 1) * cosk * cosl;
+						sumCr += getPixelVal(pixelArray[i][j], 2) * cosk * cosl; 
                     }
                 }
-                out[index++] = (ci * cj * sum);
+                out[index++] = toYCbCr((ci * cj * sumY), (ci * cj * sumCb), (ci * cj * sumCr));
             }
         }
     }
 
     // Input: array of DCT coefficients
     // Output: quantized values
-    void Quantize(vector<int>& pixelArray)
+    void Quantize(vector<PixelYCbCr>& pixelArray)
     {
         static const int quantizationMatrix[64] =
         {
@@ -210,15 +223,29 @@ private:
             72, 92, 95, 98, 112, 100, 103, 99
         };
 
+        static const int chrominanceQuantizationMatrix[64] =
+        {
+            17, 18, 24, 47, 99, 99, 99, 99,
+            18, 21, 26, 66, 99, 99, 99, 99,
+            24, 26, 56, 99, 99, 99, 99, 99,
+            47, 66, 99, 99, 99, 99, 99, 99,
+            99, 99, 99, 99, 99, 99, 99, 99,
+            99, 99, 99, 99, 99, 99, 99, 99,
+            99, 99, 99, 99, 99, 99, 99, 99,
+            99, 99, 99, 99, 99, 99, 99, 99
+        };
+
         for(int i = 0; i < pixelArray.size(); i++)
         {
-            pixelArray[i] = round((float)pixelArray[i] / quantizationMatrix[i]);
+            pixelArray[i].Y = round((float)pixelArray[i].Y / quantizationMatrix[i]);
+			pixelArray[i].Cb = round((float)pixelArray[i].Cb / chrominanceQuantizationMatrix[i]);
+			pixelArray[i].Cr = round((float)pixelArray[i].Cr / chrominanceQuantizationMatrix[i]);
         }
     }
 
-    vector<int> zigzagEncoding(vector<int> pixelArray)
+    vector<PixelYCbCr> zigzagEncoding(vector<PixelYCbCr> pixelArray)
     {
-        vector<int> result(64, 0);
+        vector<PixelYCbCr> result(64);
         static const int zigzag[64] =
         {
             0,  1,  8, 16,  9,  2,  3, 10,

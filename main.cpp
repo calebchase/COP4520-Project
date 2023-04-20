@@ -5,6 +5,7 @@
 #include <math.h>
 #include <thread>
 #include <atomic>
+#include <chrono>
 #include "huffman.hpp"
 #include "CompressorThread.hpp"
 
@@ -43,28 +44,16 @@ static const int quantizationMatrix[8][8] =
 	{ 72, 92, 95, 98, 112, 100, 103, 99 }
 };
 
-static const int quantizationMatrixLuminance[8][8] =
+static const int chrominanceQuantizationMatrix[8][8] =
 {
-	{ 16, 11, 10, 16, 24, 40, 51, 61 },
-	{ 12, 12, 14, 19, 26, 58, 60, 55 },
-	{ 14, 13, 16, 24, 40, 57, 69, 56 },
-	{ 14, 17, 22, 29, 51, 87, 80, 62 },
-	{ 18, 22, 37, 56, 68, 109, 103, 77 },
-	{ 24, 35, 55, 64, 81, 104, 113, 92 },
-	{ 49, 64, 78, 87, 103, 121, 120, 101 },
-	{ 72, 92, 95, 98, 112, 100, 103, 99 }
-};
-
-static const int quantizationMatrixChrominance[8][8] =
-{
-	{ 16, 11, 10, 16, 24, 40, 51, 61 },
-	{ 12, 12, 14, 19, 26, 58, 60, 55 },
-	{ 14, 13, 16, 24, 40, 57, 69, 56 },
-	{ 14, 17, 22, 29, 51, 87, 80, 62 },
-	{ 18, 22, 37, 56, 68, 109, 103, 77 },
-	{ 24, 35, 55, 64, 81, 104, 113, 92 },
-	{ 49, 64, 78, 87, 103, 121, 120, 101 },
-	{ 72, 92, 95, 98, 112, 100, 103, 99 }
+    { 17, 18, 24, 47, 99, 99, 99, 99 },
+    { 18, 21, 26, 66, 99, 99, 99, 99 },
+    { 24, 26, 56, 99, 99, 99, 99, 99 },
+    { 47, 66, 99, 99, 99, 99, 99, 99 },
+    { 99, 99, 99, 99, 99, 99, 99, 99 },
+    { 99, 99, 99, 99, 99, 99, 99, 99 },
+    { 99, 99, 99, 99, 99, 99, 99, 99 },
+    { 99, 99, 99, 99, 99, 99, 99, 99 }
 };
 
 
@@ -91,12 +80,12 @@ PixelYCbCr toYCbCr(int R, int G, int B)
 	return outColor;
 }
 
-void CreateYCbCrArray(unsigned char* img, vector<vector<PixelYCbCr>>& outVector, int channels)
+void CreateYCbCrArray(unsigned char* img, vector<vector<PixelYCbCr>>& outVector, int width, int height, int channels)
 {
 	int dataIndex = 0;
-	for (int i = 0; i < outVector.size(); i++)
+	for (int i = 0; i < height; i++)
 	{
-		for (int j = 0; j < outVector[i].size(); j++)
+		for (int j = 0; j < width; j++)
 		{
 			outVector[i][j] = toYCbCr(img[dataIndex], img[dataIndex + 1], img[dataIndex + 2]);
 			dataIndex += 3;
@@ -151,16 +140,6 @@ void DCT(vector<vector<PixelYCbCr>>& pixelArray, int rowIndex, int colIndex, int
 	float dctTemp[8][8];
 
 	pixelArray[0 + 0][0 + colIndex].Y = 255;
-	//cout << (*pixelArray)[0][0].Y;
-
-	// used for testing
-	// for (int i = 0; i < 8; i++)
-	// {
-	//     for (int j = 0; j < 8; j++)
-	//     {
-	//         (*pixelArray)[i][j].Y = 255;
-	//     }
-	// }
 
 	for (int i = 0; i < 8; i++)
 	{
@@ -184,19 +163,23 @@ void DCT(vector<vector<PixelYCbCr>>& pixelArray, int rowIndex, int colIndex, int
 	}
 
 	return;
-	// used for testing
-	// for (int i = 0; i < 8; i++)
-	// {
-	//     for (int j = 0; j < 8; j++)
-	//     {
-	//         cout << (float)dctTemp[i][j] << " ";
-	//     }
-	//     cout << "\n";
-	// }
 }
 
 // Input: array of DCT coefficients
 // Output: quantized values
+void Quantize(vector<vector<PixelYCbCr>>& pixelArray, int y, int x)
+{
+	for (int i = y; i < y + 8; i++)
+	{
+		for (int j = x; j < x + 8; j++)
+		{
+			pixelArray[i][j].Y = round((float)pixelArray[i][j].Y / quantizationMatrix[i][j]);
+			pixelArray[i][j].Cb = round((float)pixelArray[i][j].Cb / chrominanceQuantizationMatrix[i][j]);
+			pixelArray[i][j].Cr = round((float)pixelArray[i][j].Cr / chrominanceQuantizationMatrix[i][j]);
+		}
+	}
+}
+
 void Quantize(vector<vector<int>>& pixelArray, int rowIndex, int colIndex)
 {
 	for (int i = 0; i < 8; i++)
@@ -300,13 +283,43 @@ void testThreadedYCbCr(vector<vector<PixelYCbCr>>& r1, vector<vector<PixelYCbCr>
 	}
 }
 
+void quantizeAndEncode(vector<vector<PixelYCbCr>>& vec, int startX, int startY)
+{
+	Quantize(vec, startY, startX);
+}
+
+
+void compressToJPG(unsigned char* img, const int width, const int height, int channels)
+{
+
+	int paddingX = 8 - (width % 8);
+	int paddingY = 8 - (height % 8);
+
+	paddingX = paddingX == 8 ? 0 : paddingX;
+	paddingY = paddingY == 8 ? 0 : paddingY;
+
+	int paddedWidth = paddingX + width;
+	int paddedHeight = paddingY + height;
+
+	vector<vector<PixelYCbCr>> pixelArray((paddedHeight), vector<PixelYCbCr>(paddedWidth));
+	CreateYCbCrArray(img, pixelArray, width, height, 3);
+
+	for(int y = 0;  y < paddedWidth; y += 8)
+	{
+		for(int x = 0; x < paddedHeight; x += 8)
+		{
+			Quantize(pixelArray, y, x);
+		}
+	}
+}
+
 int main()
 {
 	int NUM_THREADS = 4;
 	thread* threads = new thread[NUM_THREADS];
 
 	int width, height, channels;
-	unsigned char* img = stbi_load("smallerTree2.jpg", &width, &height, &channels, 3);
+	unsigned char* img = stbi_load("tree.jpg", &width, &height, &channels, 3);
 
 	if (img == NULL)
 	{
@@ -326,12 +339,14 @@ int main()
 	vector<vector<PixelYCbCr>> pixelArray((height + paddingY), vector<PixelYCbCr>(width + paddingX));
 	vector<vector<PixelYCbCr>> pixelArray2((height), vector<PixelYCbCr>(width));
 
-	CreateYCbCrArray(img, pixelArray2, 3);
-	DCT(pixelArray2, 0, 0, 0);
+	CreateYCbCrArray(img, pixelArray2, width, height, channels);
+	//DCT(pixelArray2, 0, 0, 0);
 
 	atomic_int col_index(0);
 	atomic_int row_index(0);
 	atomic_bool done(false);
+
+	auto startTime = std::chrono::high_resolution_clock::now();
 
 	for(int i = 0; i < NUM_THREADS; i++)
 	{
@@ -343,7 +358,11 @@ int main()
 		threads[i].join();
 	}
 
-	while(!done.load()) { cout << "waiting\n";}
+	while(!done.load()) {}
+
+	auto endTime = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double, std::milli> runTime = endTime - startTime;
+	cout << "Time for multithreaded: " << runTime.count() << endl;
 
 	string name = "SingleThread.bmp";
 	WriteYCbCrArray(width, height, 3, pixelArray2, name.c_str());
@@ -351,18 +370,18 @@ int main()
 	name = "multiThread.bmp";
 	WriteYCbCrArray(width, height, 3, pixelArray, name.c_str());
 
-	// TESTS
 	vector<vector<int>> dctCoefficients = {
-	{139, -39,  44, -25,   8, -24,   9,  -5},
-	{  8, -21, -16,  13, -16,  -3, -10,   4},
-	{  4,   4,   4, -11, -10,  -3,  -3,   4},
-	{ -4,   4,   4,  -5,  -2,   5,   5,  -5},
-	{ -6,  -6,  -1,  -1,   0,   1,  -1,   1},
-	{  0,  -1,   0,   0,  -1,   0,   0,   1},
-	{ -1,   0,  -1,   1,   0,   0,   0,   0},
-	{ -1,  -1,   1,   0,   0,  -1,   0,   0}
+		{139, -39,  44, -25,   8, -24,   9,  -5},
+		{  8, -21, -16,  13, -16,  -3, -10,   4},
+		{  4,   4,   4, -11, -10,  -3,  -3,   4},
+		{ -4,   4,   4,  -5,  -2,   5,   5,  -5},
+		{ -6,  -6,  -1,  -1,   0,   1,  -1,   1},
+		{  0,  -1,   0,   0,  -1,   0,   0,   1},
+		{ -1,   0,  -1,   1,   0,   0,   0,   0},
+		{ -1,  -1,   1,   0,   0,  -1,   0,   0}
 	};
-
+	
+	
 	Quantize(dctCoefficients, 0, 0);
 	vector<int> flattened = flatten(dctCoefficients);
 	vector<int> zigzag = zigzagEncoding(flattened);
