@@ -65,7 +65,7 @@ public:
 		}
 
 		done.store(true);
-		cout << "thread " << id << "done" << endl;
+		// cout << "thread " << id << "done" << endl;
 	}
 
 private:

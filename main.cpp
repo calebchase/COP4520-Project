@@ -358,17 +358,40 @@ double jpg(int threadCount, unsigned char *img, int width, int height, int chann
 
 int main()
 {
+
+	string testImagesBase[9] = {
+		"forestL.png",
+		"forestM.png",
+		"forestS.png",
+		"flowersL.png",
+		"flowersM.png",
+		"flowersS.png",
+		"whiteL.png",
+		"whiteM.png",
+		"whiteS.png"};
+
+	int threads[] = {1, 4, 8};
+
 	int width, height, channels;
-	unsigned char *img = stbi_load("tree.jpg", &width, &height, &channels, 3);
-	double totalTime = 0;
+
 	int iterations = 10;
+	double totalTime;
 
-	for (int i = 0; i < iterations; i++)
+	for (string image : testImagesBase)
 	{
-		totalTime += jpg(1, img, width, height, channels);
-	}
+		unsigned char *img = stbi_load(image.c_str(), &width, &height, &channels, 3);
 
-	cout << "Average time in ms: " << totalTime / iterations << endl;
+		for (int threadCount : threads)
+		{
+			totalTime = 0;
+
+			for (int i = 0; i < iterations; i++)
+			{
+				totalTime += jpg(threadCount, img, width, height, channels);
+			}
+			cout << "image: " << image << ", threads: " << threadCount << ", avg ms: " << totalTime / iterations << endl;
+		}
+	}
 
 	// Used for testing
 	// string name = "SingleThread.bmp";
