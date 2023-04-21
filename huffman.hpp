@@ -9,110 +9,153 @@
 #include <queue>
 using namespace std;
 
+struct PixelYCbCr
+{
+	int Y;
+	int Cb;
+	int Cr;
+};
+
 struct HuffmanNode
 {
-    int val;
-    int freq;
-    HuffmanNode* l;
-    HuffmanNode* r;
+	int val;
+	int freq;
+	HuffmanNode *l;
+	HuffmanNode *r;
 
-    HuffmanNode(int val, int freq)
-    {
-        this->val = val;
-        this->freq = freq;
-        l = r = nullptr;
-    }
+	HuffmanNode(int val, int freq)
+	{
+		this->val = val;
+		this->freq = freq;
+		l = r = nullptr;
+	}
 
-    HuffmanNode(pair<int, int> p)
-    {
-        val = p.first;
-        freq = p.second;
-        l = r = nullptr;
-    }
+	HuffmanNode(pair<int, int> p)
+	{
+		val = p.first;
+		freq = p.second;
+		l = r = nullptr;
+	}
 };
 
-struct CompareNodes 
+struct CompareNodes
 {
-    bool operator()(const HuffmanNode* lhs, const HuffmanNode* rhs) const
-    {
-        return lhs->freq > rhs->freq;
-    }
+	bool operator()(const HuffmanNode *lhs, const HuffmanNode *rhs) const
+	{
+		return lhs->freq > rhs->freq;
+	}
 };
 
-HuffmanNode* buildTree(vector<pair<int, int>> table)
+HuffmanNode *buildTree(vector<pair<int, int>> table)
 {
-    priority_queue<HuffmanNode*, vector<HuffmanNode*>, CompareNodes> pq;
+	priority_queue<HuffmanNode *, vector<HuffmanNode *>, CompareNodes> pq;
 
-    for(pair<int, int> p : table)
-    {
-        pq.push(new HuffmanNode(p));
-    }
+	for (pair<int, int> p : table)
+	{
+		pq.push(new HuffmanNode(p));
+	}
 
-    while(pq.size() > 1)
-    {
-        HuffmanNode* l = pq.top();
-        pq.pop();
-        HuffmanNode* r = pq.top();
-        pq.pop();
-        HuffmanNode* p = new HuffmanNode(-1 , l->freq + r->freq);
-        p->l = l;
-        p->r = r;
-        pq.push(p);
-    }
+	while (pq.size() > 1)
+	{
+		HuffmanNode *l = pq.top();
+		pq.pop();
+		HuffmanNode *r = pq.top();
+		pq.pop();
+		HuffmanNode *p = new HuffmanNode(-1, l->freq + r->freq);
+		p->l = l;
+		p->r = r;
+		pq.push(p);
+	}
 
-    return pq.top();
+	return pq.top();
 }
 
-map<int, string> buildTable(HuffmanNode* root)
+map<int, string> buildTable(HuffmanNode *root)
 {
-    map<int, string> table;
+	map<int, string> table;
 
-    function<void(HuffmanNode*, string)> traverse = [&](HuffmanNode* node, string code)
-    {
-        if(node->l == nullptr && node->r == nullptr)
-            table[node->val] = code;
-        else
-        {
-            traverse(node->l, code + "0");
-            traverse(node->r, code + "1");
-        }
-    };
+	function<void(HuffmanNode *, string)> traverse = [&](HuffmanNode *node, string code)
+	{
+		if (node->l == nullptr && node->r == nullptr)
+			table[node->val] = code;
+		else
+		{
+			traverse(node->l, code + "0");
+			traverse(node->r, code + "1");
+		}
+	};
 
-    traverse(root, "");
+	traverse(root, "");
 
-    return table;
+	return table;
 }
 
 string encode(vector<int> vals, map<int, string> table)
 {
-    string str = "";
-    
-    for(int i : vals)
-    {
-        str += table[i];
-    }
+	string str = "";
 
-    return str;
+	for (int i : vals)
+	{
+		str += table[i];
+	}
+
+	return str;
 }
 
-vector<int> decode(string input, HuffmanNode* root)
+string encodeY(vector<PixelYCbCr> vals, map<int, string> table)
 {
-    vector<int> result;
+	string str = "";
 
-    HuffmanNode* curr = root;
-    for(int i = 0; i < input.size(); i++)
-    {
-        if(input[i] == '0')
-            curr = curr->l;
-        else
-            curr = curr->r;
+	for (PixelYCbCr i : vals)
+	{
+		str += table[i.Y];
+	}
 
-        if(curr->l == nullptr && curr->r == nullptr)
-        {
-            result.push_back(curr->val);
-            curr = root;
-        }
-    }
+	return str;
+}
 
-    return result;
+string encodeCb(vector<PixelYCbCr> vals, map<int, string> table)
+{
+	string str = "";
+
+	for (PixelYCbCr i : vals)
+	{
+		str += table[i.Cb];
+	}
+
+	return str;
+}
+
+string encodeCr(vector<PixelYCbCr> vals, map<int, string> table)
+{
+	string str = "";
+
+	for (PixelYCbCr i : vals)
+	{
+		str += table[i.Cr];
+	}
+
+	return str;
+}
+
+vector<int> decode(string input, HuffmanNode *root)
+{
+	vector<int> result;
+
+	HuffmanNode *curr = root;
+	for (int i = 0; i < input.size(); i++)
+	{
+		if (input[i] == '0')
+			curr = curr->l;
+		else
+			curr = curr->r;
+
+		if (curr->l == nullptr && curr->r == nullptr)
+		{
+			result.push_back(curr->val);
+			curr = root;
+		}
+	}
+
+	return result;
 }

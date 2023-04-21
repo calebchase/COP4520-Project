@@ -33,41 +33,37 @@ struct PixelRGB
 };
 
 static const int quantizationMatrix[8][8] =
-{
-	{ 16, 11, 10, 16, 24, 40, 51, 61 },
-	{ 12, 12, 14, 19, 26, 58, 60, 55 },
-	{ 14, 13, 16, 24, 40, 57, 69, 56 },
-	{ 14, 17, 22, 29, 51, 87, 80, 62 },
-	{ 18, 22, 37, 56, 68, 109, 103, 77 },
-	{ 24, 35, 55, 64, 81, 104, 113, 92 },
-	{ 49, 64, 78, 87, 103, 121, 120, 101 },
-	{ 72, 92, 95, 98, 112, 100, 103, 99 }
-};
+	{
+		{16, 11, 10, 16, 24, 40, 51, 61},
+		{12, 12, 14, 19, 26, 58, 60, 55},
+		{14, 13, 16, 24, 40, 57, 69, 56},
+		{14, 17, 22, 29, 51, 87, 80, 62},
+		{18, 22, 37, 56, 68, 109, 103, 77},
+		{24, 35, 55, 64, 81, 104, 113, 92},
+		{49, 64, 78, 87, 103, 121, 120, 101},
+		{72, 92, 95, 98, 112, 100, 103, 99}};
 
 static const int chrominanceQuantizationMatrix[8][8] =
-{
-    { 17, 18, 24, 47, 99, 99, 99, 99 },
-    { 18, 21, 26, 66, 99, 99, 99, 99 },
-    { 24, 26, 56, 99, 99, 99, 99, 99 },
-    { 47, 66, 99, 99, 99, 99, 99, 99 },
-    { 99, 99, 99, 99, 99, 99, 99, 99 },
-    { 99, 99, 99, 99, 99, 99, 99, 99 },
-    { 99, 99, 99, 99, 99, 99, 99, 99 },
-    { 99, 99, 99, 99, 99, 99, 99, 99 }
-};
-
+	{
+		{17, 18, 24, 47, 99, 99, 99, 99},
+		{18, 21, 26, 66, 99, 99, 99, 99},
+		{24, 26, 56, 99, 99, 99, 99, 99},
+		{47, 66, 99, 99, 99, 99, 99, 99},
+		{99, 99, 99, 99, 99, 99, 99, 99},
+		{99, 99, 99, 99, 99, 99, 99, 99},
+		{99, 99, 99, 99, 99, 99, 99, 99},
+		{99, 99, 99, 99, 99, 99, 99, 99}};
 
 static const int zigzag[64] =
-{
-	0,  1,  8, 16,  9,  2,  3, 10,
-   17, 24, 32, 25, 18, 11,  4,  5,
-   12, 19, 26, 33, 40, 48, 41, 34,
-   27, 20, 13,  6,  7, 14, 21, 28,
-   35, 42, 49, 56, 57, 50, 43, 36,
-   29, 22, 15, 23, 30, 37, 44, 51,
-   58, 59, 52, 45, 38, 31, 39, 46,
-   53, 60, 61, 54, 47, 55, 62, 63
-};
+	{
+		0, 1, 8, 16, 9, 2, 3, 10,
+		17, 24, 32, 25, 18, 11, 4, 5,
+		12, 19, 26, 33, 40, 48, 41, 34,
+		27, 20, 13, 6, 7, 14, 21, 28,
+		35, 42, 49, 56, 57, 50, 43, 36,
+		29, 22, 15, 23, 30, 37, 44, 51,
+		58, 59, 52, 45, 38, 31, 39, 46,
+		53, 60, 61, 54, 47, 55, 62, 63};
 
 PixelYCbCr toYCbCr(int R, int G, int B)
 {
@@ -80,7 +76,7 @@ PixelYCbCr toYCbCr(int R, int G, int B)
 	return outColor;
 }
 
-void CreateYCbCrArray(unsigned char* img, vector<vector<PixelYCbCr>>& outVector, int width, int height, int channels)
+void CreateYCbCrArray(unsigned char *img, vector<vector<PixelYCbCr>> &outVector, int width, int height, int channels)
 {
 	int dataIndex = 0;
 	for (int i = 0; i < height; i++)
@@ -91,12 +87,11 @@ void CreateYCbCrArray(unsigned char* img, vector<vector<PixelYCbCr>>& outVector,
 			dataIndex += 3;
 		}
 	}
-
 }
 
-void WriteYCbCrArray(int width, int height, int channels, vector<vector<PixelYCbCr>>& outVector, const char* name)
+void WriteYCbCrArray(int width, int height, int channels, vector<vector<PixelYCbCr>> &outVector, const char *name)
 {
-	unsigned char* outData = new unsigned char[width * height * channels];
+	unsigned char *outData = new unsigned char[width * height * channels];
 
 	int dataIndex = 0;
 	cout << outVector.size();
@@ -132,7 +127,7 @@ int getPixelVal(PixelYCbCr pixel, int type)
 }
 
 // Might have bugs
-void DCT(vector<vector<PixelYCbCr>>& pixelArray, int rowIndex, int colIndex, int type)
+void DCT(vector<vector<PixelYCbCr>> &pixelArray, int rowIndex, int colIndex, int type)
 {
 	float ci = 0;
 	float cj = 0;
@@ -153,9 +148,9 @@ void DCT(vector<vector<PixelYCbCr>>& pixelArray, int rowIndex, int colIndex, int
 			{
 				for (int l = 0; l < 8; l++)
 				{
-					sum += getPixelVal(pixelArray[i + rowIndex][j + colIndex], type) * 
-						cos((2 * k  + 1) * i * 3.14159 / 16.0) *
-						cos((2 * l + 1) * j * 3.14159 / 16.0);
+					sum += getPixelVal(pixelArray[i + rowIndex][j + colIndex], type) *
+						   cos((2 * k + 1) * i * 3.14159 / 16.0) *
+						   cos((2 * l + 1) * j * 3.14159 / 16.0);
 				}
 			}
 			dctTemp[i][j] = ci * cj * sum;
@@ -167,7 +162,7 @@ void DCT(vector<vector<PixelYCbCr>>& pixelArray, int rowIndex, int colIndex, int
 
 // Input: array of DCT coefficients
 // Output: quantized values
-void Quantize(vector<vector<PixelYCbCr>>& pixelArray, int y, int x)
+void Quantize(vector<vector<PixelYCbCr>> &pixelArray, int y, int x)
 {
 	for (int i = y; i < y + 8; i++)
 	{
@@ -180,7 +175,7 @@ void Quantize(vector<vector<PixelYCbCr>>& pixelArray, int y, int x)
 	}
 }
 
-void Quantize(vector<vector<int>>& pixelArray, int rowIndex, int colIndex)
+void Quantize(vector<vector<int>> &pixelArray, int rowIndex, int colIndex)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -192,11 +187,11 @@ void Quantize(vector<vector<int>>& pixelArray, int rowIndex, int colIndex)
 }
 
 // flattens a 2D array into a 1D array with same amount of elements
-vector<int> flatten(vector<vector<int>>& pixelArray)
+vector<int> flatten(vector<vector<int>> &pixelArray)
 {
 	vector<int> result;
 
-	for (const auto& v : pixelArray)
+	for (const auto &v : pixelArray)
 	{
 		result.insert(result.end(), v.begin(), v.end());
 	}
@@ -238,7 +233,7 @@ vector<pair<int, int>> runLengthEncoding(vector<int> arr)
 	int count = 1;
 	for (int i = 1; i < arr.size(); i++)
 	{
-		if(val == arr[i])
+		if (val == arr[i])
 		{
 			count++;
 		}
@@ -255,41 +250,39 @@ vector<pair<int, int>> runLengthEncoding(vector<int> arr)
 	return result;
 }
 
-void testHuffmanEncoding(vector<int>& orig, vector<int>& decoded)
+void testHuffmanEncoding(vector<int> &orig, vector<int> &decoded)
 {
 	assert(orig.size() == decoded.size());
 
-	for(int i = 0; i < orig.size(); i++)
+	for (int i = 0; i < orig.size(); i++)
 	{
 		assert(orig[i] == decoded[i]);
 	}
 }
 
-void testThreadedYCbCr(vector<vector<PixelYCbCr>>& r1, vector<vector<PixelYCbCr>>& r2)
+void testThreadedYCbCr(vector<vector<PixelYCbCr>> &r1, vector<vector<PixelYCbCr>> &r2)
 {
-	//assert(r1.size() == r2.size());
+	// assert(r1.size() == r2.size());
 
-	for(int i = 0; i < r2.size(); i++)
+	for (int i = 0; i < r2.size(); i++)
 	{
-		for(int j = 0; j < r2[i].size(); j++)
+		for (int j = 0; j < r2[i].size(); j++)
 		{
-			if((r1[i][j].Y != r2[i][j].Y) || (r1[i][j].Cb != r2[i][j].Cb) || (r1[i][j].Cr != r2[i][j].Cr))
+			if ((r1[i][j].Y != r2[i][j].Y) || (r1[i][j].Cb != r2[i][j].Cb) || (r1[i][j].Cr != r2[i][j].Cr))
 			{
 				cout << "not equal" << endl;
 				break;
 			}
-			
 		}
 	}
 }
 
-void quantizeAndEncode(vector<vector<PixelYCbCr>>& vec, int startX, int startY)
+void quantizeAndEncode(vector<vector<PixelYCbCr>> &vec, int startX, int startY)
 {
 	Quantize(vec, startY, startX);
 }
 
-
-void compressToJPG(unsigned char* img, const int width, const int height, int channels)
+void compressToJPG(unsigned char *img, const int width, const int height, int channels)
 {
 
 	int paddingX = 8 - (width % 8);
@@ -304,9 +297,9 @@ void compressToJPG(unsigned char* img, const int width, const int height, int ch
 	vector<vector<PixelYCbCr>> pixelArray((paddedHeight), vector<PixelYCbCr>(paddedWidth));
 	CreateYCbCrArray(img, pixelArray, width, height, 3);
 
-	for(int y = 0;  y < paddedWidth; y += 8)
+	for (int y = 0; y < paddedWidth; y += 8)
 	{
-		for(int x = 0; x < paddedHeight; x += 8)
+		for (int x = 0; x < paddedHeight; x += 8)
 		{
 			Quantize(pixelArray, y, x);
 		}
@@ -315,11 +308,11 @@ void compressToJPG(unsigned char* img, const int width, const int height, int ch
 
 int main()
 {
-	int NUM_THREADS = 4;
-	thread* threads = new thread[NUM_THREADS];
+	int NUM_THREADS = 1;
+	thread *threads = new thread[NUM_THREADS];
 
 	int width, height, channels;
-	unsigned char* img = stbi_load("tree.jpg", &width, &height, &channels, 3);
+	unsigned char *img = stbi_load("tree.jpg", &width, &height, &channels, 3);
 
 	if (img == NULL)
 	{
@@ -340,7 +333,7 @@ int main()
 	vector<vector<PixelYCbCr>> pixelArray2((height), vector<PixelYCbCr>(width));
 
 	CreateYCbCrArray(img, pixelArray2, width, height, channels);
-	//DCT(pixelArray2, 0, 0, 0);
+	// DCT(pixelArray2, 0, 0, 0);
 
 	atomic_int col_index(0);
 	atomic_int row_index(0);
@@ -348,17 +341,19 @@ int main()
 
 	auto startTime = std::chrono::high_resolution_clock::now();
 
-	for(int i = 0; i < NUM_THREADS; i++)
+	for (int i = 0; i < NUM_THREADS; i++)
 	{
-		threads[i] = thread(CompressorThread(i, img, (width), (height), channels), ref(row_index), ref(col_index), ref(done), ref(pixelArray)); 
+		threads[i] = thread(CompressorThread(i, img, (width), (height), channels), ref(row_index), ref(col_index), ref(done), ref(pixelArray));
 	}
 
-	for(int i = 0; i < NUM_THREADS; i++)
+	for (int i = 0; i < NUM_THREADS; i++)
 	{
 		threads[i].join();
 	}
 
-	while(!done.load()) {}
+	while (!done.load())
+	{
+	}
 
 	auto endTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> runTime = endTime - startTime;
@@ -366,28 +361,26 @@ int main()
 
 	string name = "SingleThread.bmp";
 	WriteYCbCrArray(width, height, 3, pixelArray2, name.c_str());
-	
+
 	name = "multiThread.bmp";
 	WriteYCbCrArray(width, height, 3, pixelArray, name.c_str());
 
 	vector<vector<int>> dctCoefficients = {
-		{139, -39,  44, -25,   8, -24,   9,  -5},
-		{  8, -21, -16,  13, -16,  -3, -10,   4},
-		{  4,   4,   4, -11, -10,  -3,  -3,   4},
-		{ -4,   4,   4,  -5,  -2,   5,   5,  -5},
-		{ -6,  -6,  -1,  -1,   0,   1,  -1,   1},
-		{  0,  -1,   0,   0,  -1,   0,   0,   1},
-		{ -1,   0,  -1,   1,   0,   0,   0,   0},
-		{ -1,  -1,   1,   0,   0,  -1,   0,   0}
-	};
-	
-	
+		{139, -39, 44, -25, 8, -24, 9, -5},
+		{8, -21, -16, 13, -16, -3, -10, 4},
+		{4, 4, 4, -11, -10, -3, -3, 4},
+		{-4, 4, 4, -5, -2, 5, 5, -5},
+		{-6, -6, -1, -1, 0, 1, -1, 1},
+		{0, -1, 0, 0, -1, 0, 0, 1},
+		{-1, 0, -1, 1, 0, 0, 0, 0},
+		{-1, -1, 1, 0, 0, -1, 0, 0}};
+
 	Quantize(dctCoefficients, 0, 0);
 	vector<int> flattened = flatten(dctCoefficients);
 	vector<int> zigzag = zigzagEncoding(flattened);
 	vector<pair<int, int>> rle = runLengthEncoding(zigzag);
 
-	HuffmanNode* tree = buildTree(rle);
+	HuffmanNode *tree = buildTree(rle);
 	map<int, string> table = buildTable(tree);
 	string str = encode(zigzag, table);
 
@@ -395,7 +388,6 @@ int main()
 
 	testHuffmanEncoding(zigzag, decodeTest);
 	testThreadedYCbCr(pixelArray, pixelArray2);
-
 
 	return 0;
 }
