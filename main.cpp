@@ -306,21 +306,16 @@ void compressToJPG(unsigned char *img, const int width, const int height, int ch
 	}
 }
 
-int main()
+double jpg(int threadCount, unsigned char *img, int width, int height, int channels)
 {
-	int NUM_THREADS = 1;
+	int NUM_THREADS = threadCount;
 	thread *threads = new thread[NUM_THREADS];
-
-	int width, height, channels;
-	unsigned char *img = stbi_load("tree.jpg", &width, &height, &channels, 3);
 
 	if (img == NULL)
 	{
 		std::cout << ("Error in loading the image\n");
 		exit(1);
 	}
-
-	std::cout << "Loaded image with a width of " << width << "px, a height of " << height << " px and  " << channels << " channels\n";
 
 	// Calculate padding around border of image
 	int paddingX = 8 - (width % 8);
@@ -357,7 +352,23 @@ int main()
 
 	auto endTime = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> runTime = endTime - startTime;
-	cout << "Time for multithreaded: " << runTime.count() << endl;
+	return runTime.count();
+	// cout << "Time for multithreaded: " << runTime.count() << endl;
+}
+
+int main()
+{
+	int width, height, channels;
+	unsigned char *img = stbi_load("tree.jpg", &width, &height, &channels, 3);
+	double totalTime = 0;
+	int iterations = 10;
+
+	for (int i = 0; i < iterations; i++)
+	{
+		totalTime += jpg(1, img, width, height, channels);
+	}
+
+	cout << "Average time in ms: " << totalTime / iterations << endl;
 
 	// Used for testing
 	// string name = "SingleThread.bmp";
