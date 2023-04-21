@@ -359,35 +359,36 @@ int main()
 	std::chrono::duration<double, std::milli> runTime = endTime - startTime;
 	cout << "Time for multithreaded: " << runTime.count() << endl;
 
-	string name = "SingleThread.bmp";
-	WriteYCbCrArray(width, height, 3, pixelArray2, name.c_str());
+	// Used for testing
+	// string name = "SingleThread.bmp";
+	// WriteYCbCrArray(width, height, 3, pixelArray2, name.c_str());
 
-	name = "multiThread.bmp";
-	WriteYCbCrArray(width, height, 3, pixelArray, name.c_str());
+	// name = "multiThread.bmp";
+	// WriteYCbCrArray(width, height, 3, pixelArray, name.c_str());
 
-	vector<vector<int>> dctCoefficients = {
-		{139, -39, 44, -25, 8, -24, 9, -5},
-		{8, -21, -16, 13, -16, -3, -10, 4},
-		{4, 4, 4, -11, -10, -3, -3, 4},
-		{-4, 4, 4, -5, -2, 5, 5, -5},
-		{-6, -6, -1, -1, 0, 1, -1, 1},
-		{0, -1, 0, 0, -1, 0, 0, 1},
-		{-1, 0, -1, 1, 0, 0, 0, 0},
-		{-1, -1, 1, 0, 0, -1, 0, 0}};
+	// vector<vector<int>> dctCoefficients = {
+	// 	{139, -39, 44, -25, 8, -24, 9, -5},
+	// 	{8, -21, -16, 13, -16, -3, -10, 4},
+	// 	{4, 4, 4, -11, -10, -3, -3, 4},
+	// 	{-4, 4, 4, -5, -2, 5, 5, -5},
+	// 	{-6, -6, -1, -1, 0, 1, -1, 1},
+	// 	{0, -1, 0, 0, -1, 0, 0, 1},
+	// 	{-1, 0, -1, 1, 0, 0, 0, 0},
+	// 	{-1, -1, 1, 0, 0, -1, 0, 0}};
 
-	Quantize(dctCoefficients, 0, 0);
-	vector<int> flattened = flatten(dctCoefficients);
-	vector<int> zigzag = zigzagEncoding(flattened);
-	vector<pair<int, int>> rle = runLengthEncoding(zigzag);
+	// Quantize(dctCoefficients, 0, 0);
+	// vector<int> flattened = flatten(dctCoefficients);
+	// vector<int> zigzag = zigzagEncoding(flattened);
+	// vector<pair<int, int>> rle = runLengthEncoding(zigzag);
 
-	HuffmanNode *tree = buildTree(rle);
-	map<int, string> table = buildTable(tree);
-	string str = encode(zigzag, table);
+	// HuffmanNode *tree = buildTree(rle);
+	// map<int, string> table = buildTable(tree);
+	// string str = encode(zigzag, table);
 
-	vector<int> decodeTest = decode(str, tree);
+	// vector<int> decodeTest = decode(str, tree);
 
-	testHuffmanEncoding(zigzag, decodeTest);
-	testThreadedYCbCr(pixelArray, pixelArray2);
+	// testHuffmanEncoding(zigzag, decodeTest);
+	// testThreadedYCbCr(pixelArray, pixelArray2);
 
 	return 0;
 }
